@@ -16,7 +16,6 @@ from plugins.hermes.python_sdk import (
     PythonSdkConfig,
     PythonSdkTypes,
     _load_sdk_types,
-    resolve_python_sdk_path,
 )
 
 
@@ -93,27 +92,24 @@ class PythonSdkAdapterRouting(unittest.TestCase):
 
 
 class PythonSdkPathResolution(unittest.TestCase):
-    def test_relative_sdk_path_resolves_against_plugin_dir(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "sdk"
-            (root / "atomicmemory").mkdir(parents=True)
-
-            resolved = resolve_python_sdk_path(root)
-
-        self.assertEqual(resolved, root.resolve())
-
     def test_loader_survives_plugin_named_atomicmemory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            sdk_root = _write_fake_sdk(Path(tmp) / "sdk")
-            plugin_module = SimpleNamespace(__file__="/tmp/plugin/atomicmemory/__init__.py")
+            plugin_parent = Path(tmp) / "plugins"
+            plugin_root = plugin_parent / "atomicmemory"
+            plugin_root.mkdir(parents=True)
+            sdk_root = _write_fake_sdk(Path(tmp) / "site-packages")
+            plugin_module = SimpleNamespace(__file__=str(plugin_root / "__init__.py"))
             prior = _stash_atomicmemory_modules()
             sys.modules["atomicmemory"] = plugin_module
             prior_path = list(sys.path)
+            sys.path.insert(0, str(sdk_root))
+            sys.path.insert(0, str(plugin_parent))
             try:
-                types = _load_sdk_types(sdk_root)
+                types = _load_sdk_types()
             finally:
                 sys.modules.pop("atomicmemory", None)
                 _restore_atomicmemory_modules(prior)
+                sys.path[:] = prior_path
 
         self.assertEqual(types.MemoryClient.__name__, "MemoryClient")
         self.assertIs(sys.modules.get("atomicmemory"), prior.get("atomicmemory"))

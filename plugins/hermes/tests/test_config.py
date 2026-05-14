@@ -28,7 +28,6 @@ class LoadConfigPrecedence(unittest.TestCase):
             "ATOMICMEMORY_SCOPE_AGENT": "env-agent",
             "ATOMICMEMORY_MEMORY_SCOPE": "shared",
             "ATOMICMEMORY_SEARCH_LIMIT": "9",
-            "ATOMICMEMORY_PYTHON_SDK_PATH": "../atomicmemory-python",
         }
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, "atomicmemory.json").write_text(
@@ -37,7 +36,6 @@ class LoadConfigPrecedence(unittest.TestCase):
                         "scope_agent": "file-agent",
                         "memory_scope": "siloed",
                         "search_limit": 11,
-                        "python_sdk_path": "../../sdk",
                     },
                 ),
                 encoding="utf-8",
@@ -49,7 +47,6 @@ class LoadConfigPrecedence(unittest.TestCase):
         self.assertEqual(cfg.scope_agent, "file-agent")
         self.assertEqual(cfg.memory_scope, "siloed")
         self.assertEqual(cfg.search_limit, 11)
-        self.assertEqual(cfg.python_sdk_path, "../../sdk")
 
 
 class LoadConfigDefaults(unittest.TestCase):

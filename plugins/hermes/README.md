@@ -16,32 +16,27 @@ Hermes Agent (Python)
   → plugins/memory/atomicmemory/__init__.py
       → AtomicMemoryClient (Python protocol)
           → PythonSdkAtomicMemoryClient
-              → local atomicmemory-python MemoryClient
+              → published atomicmemory Python SDK MemoryClient
 ```
 
 The Python provider owns Hermes lifecycle compatibility only — registration,
-hooks, tool schemas. Memory semantics flow through the Python SDK. Until the
-SDK is published, the plugin imports it from a local checkout.
+hooks, tool schemas. Memory semantics flow through the published Python SDK.
 
 ## Prerequisites
 
-- Local `atomicmemory-python` checkout. Default relative path from this plugin:
-  `../../../atomicmemory-python`.
 - Hermes Agent installed and `HERMES_HOME` set
 - AtomicMemory core URL exported as `ATOMICMEMORY_API_URL`
 
 ## Install (dev)
 
 The simplest dev install symlinks the plugin into Hermes' memory directory.
-The plugin then resolves the unpublished SDK from the sibling local checkout:
+Hermes installs the published `atomicmemory` SDK from `plugin.yaml`.
 
 ```bash
 cd /path/to/atomicmemory-integrations
 mkdir -p "$HERMES_HOME/plugins/memory"
 ln -s "$(pwd)/plugins/hermes" "$HERMES_HOME/plugins/memory/atomicmemory"
 export ATOMICMEMORY_API_URL="http://localhost:3050"
-# Optional if the sibling checkout is somewhere else:
-# export ATOMICMEMORY_PYTHON_SDK_PATH="/path/to/atomicmemory-python"
 ```
 
 Then select and verify the provider:
@@ -68,7 +63,6 @@ have a default API URL and fails to start if `ATOMICMEMORY_API_URL` is unset.
 |---|---|
 | `ATOMICMEMORY_API_URL` | AtomicMemory core URL. Required. |
 | `ATOMICMEMORY_API_KEY` | Bearer credential for AtomicMemory core. Optional. |
-| `ATOMICMEMORY_PYTHON_SDK_PATH` | Local `atomicmemory-python` checkout. Defaults to `../../../atomicmemory-python` relative to the plugin. |
 | `ATOMICMEMORY_PROVIDER` | SDK provider name. Defaults to `atomicmemory`. |
 | `ATOMICMEMORY_SCOPE_USER` | Hermes user identity. Defaults to `$USER`. |
 | `ATOMICMEMORY_MEMORY_SCOPE` | `shared` (default) or `siloed`. |
@@ -92,7 +86,6 @@ have a default API URL and fails to start if `ATOMICMEMORY_API_URL` is unset.
 | `prefetch_method` | `context` / `fast`. |
 | `search_limit` | int. |
 | `token_budget` | int. |
-| `python_sdk_path` | Local `atomicmemory-python` checkout path. |
 
 Secrets are never persisted here — `api_key` and `api_url` are deliberately
 not in the allowed key set.
@@ -152,9 +145,8 @@ run while AtomicMemory is temporarily unavailable.
 | Symptom | Likely cause |
 |---|---|
 | Provider does not appear in `hermes memory setup` | Wrong install path. Memory providers must live under `$HERMES_HOME/plugins/memory/<name>/`, not `$HERMES_HOME/plugins/<name>/`. |
-| `is_available()` returns False | `ATOMICMEMORY_API_URL` unset, or `ATOMICMEMORY_PYTHON_SDK_PATH` does not point at a local SDK checkout. |
-| Import fails at startup | The Hermes Python environment is missing the SDK dependencies from `plugin.yaml`, or `atomicmemory-python` is not at the configured path. |
-| Default SDK path works in dev but not after install | The relative default only fits the integrations checkout. Production installs must set `ATOMICMEMORY_PYTHON_SDK_PATH` or `python_sdk_path` until the Python SDK is published. |
+| `is_available()` returns False | `ATOMICMEMORY_API_URL` unset, or the Hermes Python environment did not install the `atomicmemory` dependency from `plugin.yaml`. |
+| Import fails at startup | The Hermes Python environment is missing the SDK dependency from `plugin.yaml`. |
 | Calls fail with `PROVIDER_UNSUPPORTED` while `memory_scope=siloed` | The configured SDK provider is not the AtomicMemory core (e.g. it's `mem0`). Either switch `ATOMICMEMORY_PROVIDER=atomicmemory` or move to `memory_scope=shared`. |
 
 ## Tests
