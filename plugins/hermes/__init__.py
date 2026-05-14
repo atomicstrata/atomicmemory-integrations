@@ -37,7 +37,7 @@ from .config import (
 from .python_sdk import (
     PythonSdkAtomicMemoryClient,
     PythonSdkConfig,
-    resolve_python_sdk_path,
+    sdk_is_available,
 )
 from .tools import (
     CONCLUDE_SCHEMA,
@@ -100,11 +100,7 @@ class AtomicMemoryMemoryProvider(MemoryProvider):
     def is_available(self) -> bool:
         if not os.environ.get("ATOMICMEMORY_API_URL"):
             return False
-        try:
-            resolve_python_sdk_path(load_config().python_sdk_path)
-        except FileNotFoundError:
-            return False
-        return True
+        return sdk_is_available()
 
     def get_config_schema(self) -> list[dict[str, Any]]:
         return get_config_schema()
@@ -319,7 +315,6 @@ class AtomicMemoryMemoryProvider(MemoryProvider):
 def _default_client_factory(config: ProviderConfig) -> AtomicMemoryClient:
     return PythonSdkAtomicMemoryClient(
         config=PythonSdkConfig(
-            sdk_path=config.python_sdk_path,
             provider=os.environ.get("ATOMICMEMORY_PROVIDER", "atomicmemory"),
             api_url=os.environ.get("ATOMICMEMORY_API_URL"),
             api_key=os.environ.get("ATOMICMEMORY_API_KEY"),

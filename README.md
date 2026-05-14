@@ -84,7 +84,7 @@ Memory semantics live in [`@atomicmemory/sdk`](https://github.com/atomicstrata/a
 
 The `@atomicmemory/cli` package is separate from the MCP stdio server. It uses the same SDK directly, but is designed for normal terminal and agent-script workflows: an Ink/React interactive UI, Honcho-style help, `init`, `doctor`, grouped `memory` / `lifecycle` / `audit` / `lessons` / `agents` / `runtime` / `config` commands, and stable `--agent` JSON output.
 
-**Hermes is the exception** to the MCP-only wrapper shape. Hermes' native memory-provider API gives the integration first-class access to `prefetch`, `queue_prefetch`, and `sync_turn` lifecycle hooks, which MCP cannot supply. The Hermes plugin uses the local `atomicmemory-python` SDK, so the Python lifecycle code never reaches into core HTTP directly.
+**Hermes is the exception** to the MCP-only wrapper shape. Hermes' native memory-provider API gives the integration first-class access to `prefetch`, `queue_prefetch`, and `sync_turn` lifecycle hooks, which MCP cannot supply. The Hermes plugin uses the published `atomicmemory` Python SDK, so the Python lifecycle code never reaches into core HTTP directly.
 
 ## Develop
 
@@ -263,8 +263,8 @@ Restart the OpenClaw host if it keeps plugin modules loaded. Verify the plugin r
 
 ### 5. Hermes
 
-The Hermes integration is a Python memory provider backed by the local
-`atomicmemory-python` SDK. After changing the provider or SDK adapter:
+The Hermes integration is a Python memory provider backed by the published
+`atomicmemory` SDK. After changing the provider or SDK adapter:
 
 ```bash
 python3 -m unittest discover plugins/hermes/tests
@@ -278,8 +278,8 @@ helper keeps these fields in sync:
 - `plugins/hermes/plugin.yaml` at `/version`
 - `plugins/hermes/package.json` at `/version`
 
-For dev installs, symlink the plugin into Hermes' memory directory. The SDK
-defaults to `../../../atomicmemory-python` relative to `plugins/hermes`:
+For dev installs, symlink the plugin into Hermes' memory directory. Hermes
+installs the published Python SDK from `plugins/hermes/plugin.yaml`:
 
 ```bash
 mkdir -p "$HERMES_HOME/plugins/memory"
@@ -294,7 +294,6 @@ Required baseline env before launching Hermes:
 export ATOMICMEMORY_API_URL="https://memory.yourco.com"
 # Optional:
 # export ATOMICMEMORY_API_KEY="..."
-# export ATOMICMEMORY_PYTHON_SDK_PATH="/path/to/atomicmemory-python"
 # export ATOMICMEMORY_MEMORY_SCOPE="shared"   # or siloed
 # export ATOMICMEMORY_MEMORY_MODE="hybrid"    # hybrid | context | tools
 ```

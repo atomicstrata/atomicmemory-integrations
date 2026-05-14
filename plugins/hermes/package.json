@@ -2,7 +2,10 @@
   "name": "@atomicmemory/hermes-plugin",
   "version": "0.1.10",
   "description": "AtomicMemory native Hermes memory provider — Python SDK-backed, cross-tool memory by default.",
-  "private": true,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",

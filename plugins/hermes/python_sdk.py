@@ -1,10 +1,10 @@
 """Python SDK client adapter for the Hermes AtomicMemory provider.
 
 This module is the only production implementation of the Hermes
-``AtomicMemoryClient`` protocol. It imports the unpublished
-``atomicmemory-python`` SDK from a local path, then routes shared reads
-through the generic SDK surface and siloed reads through the AtomicMemory
-namespace where ``source_site`` is supported.
+``AtomicMemoryClient`` protocol. It imports the published ``atomicmemory``
+Python SDK, then routes shared reads through the generic SDK surface and
+siloed reads through the AtomicMemory namespace where ``source_site`` is
+supported.
 """
 
 from __future__ import annotations
@@ -27,14 +27,12 @@ from .client import (
     Scope,
     SearchPage,
 )
-from .config import DEFAULT_PYTHON_SDK_PATH
 
 
 @dataclass(frozen=True)
 class PythonSdkConfig:
     """Runtime config needed to construct the Python SDK MemoryClient."""
 
-    sdk_path: str = DEFAULT_PYTHON_SDK_PATH
     provider: str = "atomicmemory"
     api_url: str | None = None
     api_key: str | None = None
@@ -54,23 +52,17 @@ class PythonSdkTypes:
     AtomicMemoryListOptions: Any
 
 
-def resolve_python_sdk_path(sdk_path: str | Path | None = None) -> Path:
-    """Resolve the local unpublished ``atomicmemory-python`` source path."""
-    raw = str(sdk_path or DEFAULT_PYTHON_SDK_PATH).strip()
-    path = Path(raw).expanduser()
-    if not path.is_absolute():
-        path = Path(__file__).resolve().parent / path
-    resolved = path.resolve()
-    if not (resolved / "atomicmemory").is_dir():
-        raise FileNotFoundError(
-            f"atomicmemory-python SDK not found at {resolved}. "
-            "Set ATOMICMEMORY_PYTHON_SDK_PATH to the local SDK checkout."
-        )
-    return resolved
+def sdk_is_available() -> bool:
+    """Return whether the published AtomicMemory Python SDK can be imported."""
+    try:
+        _load_sdk_types()
+    except ImportError:
+        return False
+    return True
 
 
 class PythonSdkAtomicMemoryClient:
-    """AtomicMemoryClient implementation backed by ``atomicmemory-python``."""
+    """AtomicMemoryClient implementation backed by the ``atomicmemory`` SDK."""
 
     def __init__(
         self,
@@ -87,7 +79,7 @@ class PythonSdkAtomicMemoryClient:
             return
         if not self._config.api_url:
             raise BridgeError("ATOMICMEMORY_API_URL is required", code="CONFIG_REQUIRED")
-        types = self._types or _load_sdk_types(self._config.sdk_path)
+        types = self._types or _load_sdk_types()
         providers = {self._config.provider: _provider_config(self._config)}
         self._client = types.MemoryClient(providers=providers, default_provider=self._config.provider)
         self._client.initialize()
@@ -215,12 +207,11 @@ class PythonSdkAtomicMemoryClient:
         return self._types.UserScope(user_id=user)
 
 
-def _load_sdk_types(sdk_path: str | Path) -> PythonSdkTypes:
-    resolved = resolve_python_sdk_path(sdk_path)
-    resolved_str = str(resolved)
-    prior_path_index = _move_sdk_path_to_front(resolved_str)
+def _load_sdk_types() -> PythonSdkTypes:
+    plugin_roots = _plugin_roots()
+    removed_path_entries = _remove_plugin_import_roots(plugin_roots)
     try:
-        saved_modules = _stash_non_sdk_atomicmemory_modules(resolved)
+        saved_modules = _stash_plugin_atomicmemory_modules(plugin_roots)
         try:
             from atomicmemory import MemoryClient  # type: ignore[import-not-found]
             from atomicmemory.providers.atomicmemory.handle import (  # type: ignore[import-not-found]
@@ -231,7 +222,7 @@ def _load_sdk_types(sdk_path: str | Path) -> PythonSdkTypes:
         finally:
             _restore_modules(saved_modules)
     finally:
-        _restore_sdk_path(resolved_str, prior_path_index)
+        _restore_path_entries(removed_path_entries)
 
     return PythonSdkTypes(
         MemoryClient=MemoryClient,
@@ -241,31 +232,13 @@ def _load_sdk_types(sdk_path: str | Path) -> PythonSdkTypes:
     )
 
 
-def _move_sdk_path_to_front(resolved_str: str) -> int | None:
-    if resolved_str not in sys.path:
-        sys.path.insert(0, resolved_str)
-        return None
-    prior_index = sys.path.index(resolved_str)
-    sys.path.pop(prior_index)
-    sys.path.insert(0, resolved_str)
-    return prior_index
-
-
-def _restore_sdk_path(resolved_str: str, prior_index: int | None) -> None:
-    if resolved_str in sys.path:
-        sys.path.remove(resolved_str)
-    if prior_index is not None:
-        sys.path.insert(min(prior_index, len(sys.path)), resolved_str)
-
-
-def _stash_non_sdk_atomicmemory_modules(sdk_root: Path) -> dict[str, Any]:
+def _stash_plugin_atomicmemory_modules(plugin_roots: set[Path]) -> dict[str, Any]:
     saved: dict[str, Any] = {}
     for name, module in list(sys.modules.items()):
         if not _is_atomicmemory_module(name):
             continue
-        if _module_is_under(module, sdk_root):
-            continue
-        saved[name] = sys.modules.pop(name)
+        if _should_stash_atomicmemory_module(name, module, plugin_roots):
+            saved[name] = sys.modules.pop(name)
     return saved
 
 
@@ -276,6 +249,46 @@ def _restore_modules(saved_modules: dict[str, Any]) -> None:
 
 def _is_atomicmemory_module(name: str) -> bool:
     return name == "atomicmemory" or name.startswith("atomicmemory.")
+
+
+def _plugin_roots() -> set[Path]:
+    roots = {Path(__file__).resolve().parent}
+    module = sys.modules.get("atomicmemory")
+    file_name = getattr(module, "__file__", None)
+    if file_name:
+        try:
+            roots.add(Path(file_name).resolve().parent)
+        except OSError:
+            pass
+    return roots
+
+
+def _remove_plugin_import_roots(plugin_roots: set[Path]) -> list[tuple[int, str]]:
+    removed: list[tuple[int, str]] = []
+    for index, path_entry in reversed(list(enumerate(sys.path))):
+        if _path_entry_points_to_plugin(path_entry, plugin_roots):
+            removed.append((index, sys.path.pop(index)))
+    return list(reversed(removed))
+
+
+def _restore_path_entries(removed_entries: list[tuple[int, str]]) -> None:
+    for index, path_entry in removed_entries:
+        sys.path.insert(min(index, len(sys.path)), path_entry)
+
+
+def _path_entry_points_to_plugin(path_entry: str, plugin_roots: set[Path]) -> bool:
+    raw_path = Path(path_entry or ".").expanduser()
+    try:
+        candidate = (raw_path / "atomicmemory").resolve()
+    except OSError:
+        return False
+    return any(candidate == root for root in plugin_roots)
+
+
+def _should_stash_atomicmemory_module(name: str, module: Any, plugin_roots: set[Path]) -> bool:
+    if any(_module_is_under(module, root) for root in plugin_roots):
+        return True
+    return name == "atomicmemory" and not hasattr(module, "MemoryClient")
 
 
 def _module_is_under(module: Any, root: Path) -> bool:

@@ -28,7 +28,6 @@ DEFAULT_TOKEN_BUDGET = 4000
 DEFAULT_MEMORY_MODE = "hybrid"
 DEFAULT_MEMORY_SCOPE = "shared"
 DEFAULT_PREFETCH_METHOD = "context"
-DEFAULT_PYTHON_SDK_PATH = "../../../atomicmemory-python"
 
 VALID_MEMORY_MODES = {"hybrid", "context", "tools"}
 VALID_MEMORY_SCOPES = {"shared", "siloed"}
@@ -43,7 +42,6 @@ CONFIG_FILE_KEYS = {
     "memory_mode",
     "memory_scope",
     "prefetch_method",
-    "python_sdk_path",
 }
 """Keys allowed in $HERMES_HOME/atomicmemory.json.
 
@@ -62,7 +60,6 @@ class ProviderConfig:
     memory_mode: str = DEFAULT_MEMORY_MODE
     memory_scope: str = DEFAULT_MEMORY_SCOPE
     prefetch_method: str = DEFAULT_PREFETCH_METHOD
-    python_sdk_path: str = DEFAULT_PYTHON_SDK_PATH
 
 
 def load_config(
@@ -87,7 +84,6 @@ def load_config(
         prefetch_method=_normalized(
             env.get("ATOMICMEMORY_PREFETCH_METHOD"), DEFAULT_PREFETCH_METHOD, VALID_PREFETCH_METHODS,
         ),
-        python_sdk_path=_clean(env.get("ATOMICMEMORY_PYTHON_SDK_PATH")) or DEFAULT_PYTHON_SDK_PATH,
     )
     file_overrides = _read_config_file(hermes_home)
     return _apply_file_overrides(cfg, file_overrides)
@@ -218,8 +214,6 @@ def _apply_file_overrides(cfg: ProviderConfig, file_overrides: dict[str, Any]) -
         cfg.prefetch_method = _normalized(
             file_overrides["prefetch_method"], cfg.prefetch_method, VALID_PREFETCH_METHODS,
         )
-    if "python_sdk_path" in file_overrides:
-        cfg.python_sdk_path = _clean(str(file_overrides["python_sdk_path"])) or cfg.python_sdk_path
     cfg.search_limit = max(1, min(cfg.search_limit, 50))
     cfg.token_budget = max(100, cfg.token_budget)
     return cfg
