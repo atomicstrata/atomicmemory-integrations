@@ -22,14 +22,37 @@ import { dirname, resolve } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const cliRoot = resolve(here, '..', '..');
 const binPath = resolve(cliRoot, 'dist', 'bin.js');
+const missingConfigPath = resolve(cliRoot, '.subprocess-smoke-missing-config.json');
+const ATOMICMEMORY_ENV_KEYS = [
+  'ATOMICMEMORY_API_KEY',
+  'ATOMICMEMORY_API_URL',
+  'ATOMICMEMORY_CONFIG',
+  'ATOMICMEMORY_PROVIDER',
+  'ATOMICMEMORY_SCOPE_AGENT_ID',
+  'ATOMICMEMORY_SCOPE_NAMESPACE',
+  'ATOMICMEMORY_SCOPE_THREAD',
+  'ATOMICMEMORY_SCOPE_USER',
+  'ATOMICMEMORY_TRUST_SURFACE',
+] as const;
+
+function isolatedSubprocessEnv(overrides: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  for (const key of ATOMICMEMORY_ENV_KEYS) delete env[key];
+  return {
+    ...env,
+    ATOMICMEMORY_CONFIG: missingConfigPath,
+    ...overrides,
+    NO_COLOR: '1',
+  };
+}
 
 function runBin(
   args: readonly string[],
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = {},
 ): { stdout: string; stderr: string; code: number } {
   const r = spawnSync(process.execPath, [binPath, ...args], {
     encoding: 'utf8',
-    env: { ...env, NO_COLOR: '1' },
+    env: isolatedSubprocessEnv(env),
   });
   return {
     stdout: r.stdout ?? '',
@@ -76,10 +99,7 @@ test('subprocess: --json help emits exactly one parseable JSON document, no prea
 });
 
 test('subprocess: hooks install is provider-free even with partial provider env', { skip: skipIfUnbuilt }, () => {
-  const env = { ...process.env };
-  delete env.ATOMICMEMORY_TRUST_SURFACE;
   const r = runBin(['--json', 'hooks', 'install', '--host', 'codex'], {
-    ...env,
     ATOMICMEMORY_PROVIDER: 'atomicmemory',
     ATOMICMEMORY_API_URL: 'https://core.example.invalid',
   });

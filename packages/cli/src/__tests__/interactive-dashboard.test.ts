@@ -20,7 +20,12 @@ import {
   createInteractiveRuntimeSession,
   mergeInteractiveFlags,
 } from '../cli/interactive-session.js';
-import { shouldLaunchDashboard, type RuntimeState } from '../cli/runtime.js';
+import {
+  resolveRuntimeProfile,
+  resolveRuntimeScope,
+  shouldLaunchDashboard,
+  type RuntimeState,
+} from '../cli/runtime.js';
 
 test('splitShellWords supports quoted dashboard command input', () => {
   assert.deepEqual(splitShellWords('search "release policy" --namespace docs'), [
@@ -84,6 +89,27 @@ test('shouldLaunchDashboard only launches for bare or explicit interactive invoc
   assert.equal(shouldLaunchDashboard({ path: 'doctor', positional: [], flags: { interactive: true } }), true);
   assert.equal(shouldLaunchDashboard({ path: 'help', positional: [], flags: {}, source: 'help_flag' }), false);
   assert.equal(shouldLaunchDashboard({ path: 'doctor', positional: [], flags: {} }), false);
+});
+
+test('bare dashboard hydrates saved profile and scope for cached commands', () => {
+  const config = sessionConfig('user-from-profile');
+  const invocation = { path: 'help', positional: [], flags: {}, source: 'bare' } as const;
+  const profile = resolveRuntimeProfile(invocation, config, 'default', {});
+  const scope = resolveRuntimeScope(invocation, profile, {});
+
+  assert.equal(profile?.provider, 'atomicmemory');
+  assert.equal(profile?.apiUrl, 'http://localhost:3050');
+  assert.deepEqual(scope, { user: 'user-from-profile' });
+});
+
+test('plain help stays provider-free outside dashboard mode', () => {
+  const config = sessionConfig('user-from-profile');
+  const invocation = { path: 'help', positional: [], flags: {}, source: 'help_flag' } as const;
+  const profile = resolveRuntimeProfile(invocation, config, 'default', {});
+  const scope = resolveRuntimeScope(invocation, profile, {});
+
+  assert.equal(profile, null);
+  assert.deepEqual(scope, {});
 });
 
 test('mergeInteractiveFlags inherits only profile, provider, scope, and config flags', () => {
