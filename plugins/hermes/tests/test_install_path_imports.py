@@ -1,0 +1,73 @@
+"""Regression: package must import under the installed Hermes path.
+
+Hermes loads memory provider plugins from `$HERMES_HOME/plugins/memory/<name>/`.
+After install, the directory is named `atomicmemory/` — not `plugins/hermes/`
+— so any `from plugins.hermes.<x> import ...` import will fail with
+ModuleNotFoundError. All in-package imports must be relative.
+
+This test simulates the installed layout by copying every shipped file into a
+temp dir named `atomicmemory/`, then loading it as a package via importlib.
+If anything imports `plugins.hermes.*` at module load time, it fails here.
+"""
+
+from __future__ import annotations
+
+import importlib
+import importlib.util
+import json
+import shutil
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+PLUGIN_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _shipped_files() -> list[str]:
+    """Read the file list package.json declares as the published surface."""
+    pkg = json.loads((PLUGIN_ROOT / "package.json").read_text(encoding="utf-8"))
+    files = pkg.get("files") or []
+    return [f for f in files if f.endswith(".py")]
+
+
+class InstallPathImportsResolve(unittest.TestCase):
+    def test_package_loads_when_directory_is_renamed_to_atomicmemory(self) -> None:
+        shipped = _shipped_files()
+        self.assertIn("__init__.py", shipped, "package.json must ship __init__.py")
+        self.assertIn("tools.py", shipped, "package.json must ship tools.py")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            install_root = Path(tmp) / "memory_plugins"
+            pkg_dir = install_root / "atomicmemory"
+            pkg_dir.mkdir(parents=True)
+            for name in shipped:
+                shutil.copy(PLUGIN_ROOT / name, pkg_dir / name)
+
+            # Add the parent so `import atomicmemory` resolves to our copy.
+            sys.path.insert(0, str(install_root))
+            # Wipe any prior import of `atomicmemory` from this process.
+            for mod in list(sys.modules):
+                if mod == "atomicmemory" or mod.startswith("atomicmemory."):
+                    del sys.modules[mod]
+            try:
+                installed = importlib.import_module("atomicmemory")
+                # Symbols the provider class needs; absence means a relative
+                # import inside the package failed under the install layout.
+                self.assertTrue(hasattr(installed, "AtomicMemoryMemoryProvider"))
+                self.assertTrue(hasattr(installed, "register"))
+                # Submodules must also load relatively.
+                tools_mod = importlib.import_module("atomicmemory.tools")
+                self.assertTrue(hasattr(tools_mod, "TOOL_HANDLERS"))
+                sdk_mod = importlib.import_module("atomicmemory.python_sdk")
+                self.assertTrue(hasattr(sdk_mod, "PythonSdkAtomicMemoryClient"))
+            finally:
+                sys.path.remove(str(install_root))
+                for mod in list(sys.modules):
+                    if mod == "atomicmemory" or mod.startswith("atomicmemory."):
+                        del sys.modules[mod]
+
+
+if __name__ == "__main__":
+    unittest.main()

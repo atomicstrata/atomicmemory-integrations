@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://docs.atomicmemory.ai/integrations/
+    about: Read the AtomicMemory integration docs.
+  - name: Discussions
+    url: https://github.com/atomicstrata/atomicmemory-integrations/discussions
+    about: Ask questions, share ideas, and discuss roadmap items.

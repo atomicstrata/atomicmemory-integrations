@@ -1,0 +1,14 @@
+name: atomicmemory
+version: 0.1.10
+description: "AtomicMemory native Hermes memory provider — Python SDK-backed, cross-tool memory by default."
+pip_dependencies:
+  - "httpx>=0.27"
+  - "pydantic>=2.7"
+  - "numpy>=1.26"
+hooks:
+  - system_prompt_block
+  - prefetch
+  - queue_prefetch
+  - sync_turn
+  - on_session_end
+  - shutdown

@@ -1,0 +1,21 @@
+name: Docs Issue
+description: Report missing, unclear, or incorrect integration documentation.
+labels: [docs]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page or file
+      placeholder: "README.md, plugin README, docs URL, etc."
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
