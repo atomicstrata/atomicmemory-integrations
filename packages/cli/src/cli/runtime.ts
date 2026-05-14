@@ -162,7 +162,7 @@ function loadRuntimeConfig(
   return { paths, config, profileName };
 }
 
-function resolveRuntimeProfile(
+export function resolveRuntimeProfile(
   invocation: Invocation,
   config: CliConfigShape,
   profileName: string,
@@ -171,7 +171,7 @@ function resolveRuntimeProfile(
   if (invocation.path === 'init') {
     return config.profiles[profileName] ?? null;
   }
-  if (isProviderFreeInvocation(invocation)) {
+  if (isProviderFreeInvocation(invocation) && !isDashboardInvocation(invocation)) {
     return null;
   }
   const baseProfile = resolveBaseProfile(invocation.flags, config, profileName, env);
@@ -183,7 +183,11 @@ function isProviderFreeInvocation(invocation: Invocation): boolean {
   return invocation.path === 'hooks' && invocation.positional[0] === 'install';
 }
 
-function resolveRuntimeScope(
+function isDashboardInvocation(invocation: Invocation): boolean {
+  return invocation.source === 'bare' || invocation.flags.interactive === true;
+}
+
+export function resolveRuntimeScope(
   invocation: Invocation,
   profile: CliProfileShape | null,
   env: NodeJS.ProcessEnv,
