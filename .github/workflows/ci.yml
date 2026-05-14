@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
+    steps:
+      # The integrations workspace pulls @atomicmemory/sdk via
+      # `file:../../../atomicmemory-sdk` in packages/cli, packages/mcp-server,
+      # adapters/openai-agents-sdk, and adapters/vercel-ai-sdk. The SDK must
+      # be present as a sibling of the integrations checkout for
+      # `pnpm install` to resolve. CROSS_REPO_TOKEN (PAT with read on the
+      # OSS SDK repo) is required while the SDK repo is still private;
+      # persist-credentials is disabled so the PAT is not leaked to later
+      # steps.
+      - uses: actions/checkout@v4
+        with:
+          path: am-integrations-internal
+          # Full history so future tooling (e.g. fallow audit) can diff
+          # against the PR base.
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: atomicmemory/atomicmemory-sdk
+          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          persist-credentials: false
+          path: atomicmemory-sdk
+
+      # pnpm version comes from the integrations root package.json's
+      # `packageManager` field; point the action at that file explicitly
+      # since we checked out under a named subpath.
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: am-integrations-internal/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+          cache-dependency-path: am-integrations-internal/pnpm-lock.yaml
+
+      # The hermes plugin is Python and uses `python3 -m unittest discover
+      # tests` via `pnpm -r test`. Pin a stable Python so the test job is
+      # deterministic across runner images.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # The SDK's package.json exports point to dist/*, so install its
+      # deps and build before the integrations install. Otherwise the
+      # file: dep resolves to a source-only SDK with no consumable entry.
+      - name: Install SDK deps
+        run: pnpm install --no-frozen-lockfile
+        working-directory: atomicmemory-sdk
+
+      - name: Build SDK
+        run: pnpm build
+        working-directory: atomicmemory-sdk
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+        working-directory: am-integrations-internal
+
+      # Build before typecheck so cross-package consumers (e.g.
+      # plugins/openclaw importing `@atomicmemory/mcp-server/spawn`) can
+      # resolve dist/*.d.ts via their package.json exports. Without this,
+      # typecheck fails with TS2307 on subpath imports because dist/ is
+      # only populated by the build step.
+      - name: Build
+        run: pnpm -r build
+        working-directory: am-integrations-internal
+
+      - name: Type check
+        run: pnpm -r typecheck
+        working-directory: am-integrations-internal
+
+      - name: Lint
+        run: pnpm -r lint
+        working-directory: am-integrations-internal
+
+      - name: Test
+        # Runs every workspace package's `test` script. Covers TS unit tests
+        # (cli, mcp-server, adapters), Python unittest (hermes), and bash
+        # smoke tests (claude-code). Packages without a `test` script are
+        # skipped by pnpm.
+        run: pnpm -r test
+        working-directory: am-integrations-internal

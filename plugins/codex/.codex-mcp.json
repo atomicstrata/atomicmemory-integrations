@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "atomicmemory": {
+      "command": "bash",
+      "args": ["-c", "exec node \"$ATOMICMEMORY_MCP_SERVER_BIN\""],
+      "env_vars": [
+        "ATOMICMEMORY_MCP_SERVER_BIN",
+        "ATOMICMEMORY_API_URL",
+        "ATOMICMEMORY_PROVIDER",
+        "ATOMICMEMORY_SCOPE_AGENT",
+        "ATOMICMEMORY_SCOPE_NAMESPACE",
+        "ATOMICMEMORY_SCOPE_THREAD"
+      ]
+    }
+  }
+}

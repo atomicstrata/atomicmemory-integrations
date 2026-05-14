@@ -1,0 +1,33 @@
+{
+  "name": "atomicmemory-integrations",
+  "version": "0.5.0",
+  "private": true,
+  "description": "Plugins, adapters, and the shared MCP server that expose AtomicMemory to coding agents and AI frameworks.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomicstrata/atomicmemory-integrations.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "fallow": "fallow",
+    "fallow:audit": "fallow audit",
+    "fallow:ci": "fallow --ci",
+    "fallow:dead-code": "fallow dead-code",
+    "fallow:dupes": "fallow dupes",
+    "fallow:health": "fallow health",
+    "bump:plugin-versions": "node scripts/bump-plugin-versions.mjs",
+    "check:plugin-versions": "node scripts/bump-plugin-versions.mjs --check"
+  },
+  "devDependencies": {
+    "fallow": "^2.51.0",
+    "typescript": "^5.6.0"
+  }
+}

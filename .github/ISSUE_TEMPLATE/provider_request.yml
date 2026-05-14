@@ -1,0 +1,35 @@
+name: Provider Request
+description: Request an integration with an agent, framework, provider, or tool.
+labels: [provider]
+body:
+  - type: input
+    id: provider
+    attributes:
+      label: Provider, framework, or tool name
+      placeholder: "Agent, framework, provider, or tool name"
+    validations:
+      required: true
+  - type: dropdown
+    id: provider-type
+    attributes:
+      label: Integration type
+      options:
+        - Coding agent
+        - AI framework
+        - Memory backend
+        - MCP client
+        - Runtime/tooling
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What workflow would this integration enable?
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: API docs or references

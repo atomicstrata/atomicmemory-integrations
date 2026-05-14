@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "workspaces": {
+    "patterns": ["packages/*", "plugins/*", "adapters/*"]
+  },
+  "entry": [
+    "scripts/*.mjs",
+    "packages/cli/scripts/docker/*.mjs",
+    "packages/mcp-server/src/index.ts",
+    "packages/mcp-server/src/bin.ts",
+    "packages/mcp-server/src/spawn.ts",
+    "packages/*/src/**/*.test.ts",
+    "plugins/openclaw/src/index.ts",
+    "adapters/vercel-ai-sdk/src/index.ts",
+    "adapters/*/src/**/*.test.ts"
+  ],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/coverage/**",
+    "**/*.d.ts",
+    "**/*.d.ts.map"
+  ],
+  "ignoreDependencies": ["ink", "@jrichman/ink"],
+  "usedClassMembers": [
+    {
+      "implements": "ProviderAdapter",
+      "members": [
+        "providerName",
+        "getStatus",
+        "getCapabilities",
+        "ingestMemories",
+        "searchMemories",
+        "listMemories",
+        "getMemory",
+        "deleteMemory",
+        "packageContext"
+      ]
+    }
+  ],
+  "rules": {
+    "unused-files": "warn",
+    "unused-exports": "warn",
+    "unused-types": "warn",
+    "unused-dependencies": "warn",
+    "unused-dev-dependencies": "warn",
+    "unused-optional-dependencies": "warn",
+    "unused-enum-members": "warn",
+    "unused-class-members": "warn",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "warn",
+    "duplicate-exports": "warn",
+    "type-only-dependencies": "warn",
+    "test-only-dependencies": "warn",
+    "circular-dependencies": "warn",
+    "boundary-violation": "warn",
+    "coverage-gaps": "off"
+  },
+  "duplicates": {
+    "mode": "mild",
+    "minTokens": 80,
+    "minLines": 8,
+    "threshold": 0,
+    "ignoreImports": true,
+    "ignore": ["**/*.test.ts", "**/dist/**"]
+  },
+  "health": {
+    "maxCyclomatic": 20,
+    "maxCognitive": 15,
+    "maxCrap": 999,
+    "ignore": ["**/*.test.ts", "**/dist/**"]
+  }
+}
