@@ -56,28 +56,9 @@ The MCP config forwards the required environment variables with `env_vars`, so v
 
 ## Configure
 
-Before any of the install options, clone `atomicmemory-sdk` and `atomicmemory-integrations` side-by-side, then build each in order. The MCP server resolves the SDK through a sibling `file:` spec and imports from the SDK's `dist/` output, so both repos must exist as siblings and the SDK must be built first.
+Export scope and credentials in your shell:
 
 ```bash
-# From the parent directory that will hold both repos
-git clone https://github.com/atomicstrata/atomicmemory-sdk.git
-git clone https://github.com/atomicstrata/atomicmemory-integrations.git
-
-# Build the SDK (produces atomicmemory-sdk/dist/)
-cd atomicmemory-sdk
-pnpm install
-pnpm build
-
-# Build the MCP server (produces atomicmemory-integrations/packages/mcp-server/dist/bin.js)
-cd ../atomicmemory-integrations
-pnpm install
-pnpm --filter @atomicmemory/mcp-server build
-```
-
-Then export scope, credentials, and the absolute path to the built binary in your shell:
-
-```bash
-export ATOMICMEMORY_MCP_SERVER_BIN="$HOME/path/to/atomicmemory-integrations/packages/mcp-server/dist/bin.js"
 export ATOMICMEMORY_API_URL="https://memory.yourco.com"
 export ATOMICMEMORY_API_KEY="am_live_…"
 export ATOMICMEMORY_PROVIDER="atomicmemory"
@@ -88,7 +69,7 @@ export ATOMICMEMORY_SCOPE_USER="pip"
 # export ATOMICMEMORY_SCOPE_THREAD="<session-id>"
 ```
 
-`ATOMICMEMORY_MCP_SERVER_BIN` is required — the plugin spawns the server by `node`-executing that path. At least one `ATOMICMEMORY_SCOPE_*` must also be set — the server rejects scopeless requests.
+At least one `ATOMICMEMORY_SCOPE_*` must be set — the server rejects scopeless requests. The MCP server itself is fetched from npm on first use via `npx -y --package=@atomicmemory/mcp-server@^0.1.1 atomicmemory-mcp`, so no local clone or build is required.
 
 ## Memory behavior
 
@@ -165,9 +146,9 @@ For Codex, the helper keeps these versions aligned:
 
 The marketplace JSON intentionally has no plugin version field. Restart Codex or reinstall the local plugin after changing any of these files so the installed plugin cache reloads the manifest and skill.
 
-## Status: source-only
+## Status: plugin source-only, MCP server on npm
 
-Nothing here is published to npm or to any public plugin marketplace. The plugin is installed from a local clone of this repo (Option A / B above), and the MCP server it spawns runs from the local `dist/bin.js` produced by `pnpm --filter @atomicmemory/mcp-server build`. See the [mcp-server status note](../../packages/mcp-server/README.md) for why this is source-only by design.
+The Codex *plugin* (manifest + skill) is not yet published to any public Codex plugin marketplace — install it from a local clone of this repo via Option A / B above, or wire `.codex-mcp.json` into Codex directly via Option C. The MCP server it spawns is published as [`@atomicmemory/mcp-server`](https://www.npmjs.com/package/@atomicmemory/mcp-server) and is fetched on first use via `npx`, so no local clone or build of the integrations repo is required to actually run the server.
 
 ## License
 
