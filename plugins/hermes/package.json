@@ -13,7 +13,7 @@
     "directory": "plugins/hermes"
   },
   "bin": {
-    "atomicmemory-hermes": "./install.mjs"
+    "atomicmemory-hermes": "install.mjs"
   },
   "files": [
     "CHANGELOG.md",
