@@ -16,34 +16,11 @@ brew install jq
 sudo apt-get install -y jq
 ```
 
-### 2. Clone and build the MCP server
+### 2. Export shell env vars
 
-Clone `atomicmemory-sdk` and `atomicmemory-integrations` side-by-side, then build each in order. The MCP server resolves the SDK through a sibling `file:` spec, and imports from the SDK's `dist/` output — so both repos must exist as siblings and the SDK must be built first.
-
-```bash
-# From the parent directory that will hold both repos
-git clone https://github.com/atomicstrata/atomicmemory-sdk.git
-git clone https://github.com/atomicstrata/atomicmemory-integrations.git
-
-# Build the SDK (produces atomicmemory-sdk/dist/)
-cd atomicmemory-sdk
-pnpm install
-pnpm build
-
-# Build the MCP server (produces atomicmemory-integrations/packages/mcp-server/dist/bin.js)
-cd ../atomicmemory-integrations
-pnpm install
-pnpm --filter @atomicmemory/mcp-server build
-```
-
-### 3. Export shell env vars
-
-Both the MCP server and the lifecycle hook scripts read their config from the shell environment. Export these in `~/.zshrc` / `~/.bashrc` before launching Claude Code:
+The MCP server and the lifecycle hook scripts read their config from the shell environment. Export these in `~/.zshrc` / `~/.bashrc` before launching Claude Code:
 
 ```bash
-# Absolute path to the binary built in step 2
-export ATOMICMEMORY_MCP_SERVER_BIN="$HOME/path/to/atomicmemory-integrations/packages/mcp-server/dist/bin.js"
-
 export ATOMICMEMORY_API_URL="https://memory.yourco.com"
 export ATOMICMEMORY_API_KEY="am_live_…"
 export ATOMICMEMORY_PROVIDER="atomicmemory"
@@ -55,7 +32,7 @@ export ATOMICMEMORY_CAPTURE_LEVEL="balanced" # minimal|balanced|full
 # export ATOMICMEMORY_SCOPE_THREAD="<thread-id>"
 ```
 
-`ATOMICMEMORY_MCP_SERVER_BIN`, `ATOMICMEMORY_API_URL`, `ATOMICMEMORY_API_KEY`, `ATOMICMEMORY_PROVIDER`, `ATOMICMEMORY_SCOPE_USER`, and `ATOMICMEMORY_CAPTURE_LEVEL` are required for the Claude Code plugin and hooks. Optional scope vars narrow retrieval and lifecycle record metadata.
+`ATOMICMEMORY_API_URL`, `ATOMICMEMORY_API_KEY`, `ATOMICMEMORY_PROVIDER`, `ATOMICMEMORY_SCOPE_USER`, and `ATOMICMEMORY_CAPTURE_LEVEL` are required for the Claude Code plugin and hooks. Optional scope vars narrow retrieval and lifecycle record metadata.
 If `ATOMICMEMORY_SCOPE_USER` is empty, the MCP server derives a local user from the host OS; set it explicitly when multiple operators share a machine or when you need a stable cross-machine identity.
 
 #### Local extraction with Claude Code auth
@@ -77,7 +54,6 @@ for hosted/team deployments where a server would run under one operator's
 Claude Code subscription. Embeddings still use core's configured embedding
 provider; select a local embedding provider separately for a fully local setup.
 
-- `_MCP_SERVER_BIN` — absolute path to the built MCP server entry. The plugin spawns it directly, so no npm registry lookup happens.
 - `_API_URL` / `_API_KEY` / `_PROVIDER` / `_SCOPE_USER` — needed by **both** the MCP server (for `memory_search` / `memory_ingest` / `memory_package` tool calls) and lifecycle hooks.
 - `_CAPTURE_LEVEL` — controls lifecycle write volume. Valid values are `minimal`, `balanced`, and `full`.
 - `_SCOPE_NAMESPACE` — used by both, as a per-project isolation boundary.
@@ -99,7 +75,7 @@ Optional capture controls:
 
 If required config is missing, helper tools are unavailable, or numeric/boolean env vars are invalid, hooks surface the error instead of running in a degraded mode.
 
-### 4. Install the plugin
+### 3. Install the plugin
 
 From the cloned repo:
 
@@ -111,7 +87,7 @@ claude plugin marketplace add ./
 claude plugin install claude-code@atomicmemory
 ```
 
-### 5. Update and verify an existing install
+### 4. Update and verify an existing install
 
 Claude Code updates are version-gated. If hook scripts, `hooks.json`, `.claude-plugin/plugin.json`, skills, or marketplace metadata changed, bump plugin versions from the repo root before relying on `claude plugin update`:
 
@@ -127,11 +103,9 @@ For Claude, the helper keeps these files in sync:
 
 If the version stays unchanged, `claude plugin update claude-code@atomicmemory` can report "already at the latest version" while the installed cache still contains older files.
 
-After changing this repo, rebuild the MCP server and refresh Claude's installed plugin cache:
+After changing this repo, refresh Claude's installed plugin cache:
 
 ```bash
-pnpm --filter @atomicmemory/mcp-server build
-
 claude plugin marketplace list
 
 # If the plugin is already installed:
@@ -140,6 +114,8 @@ claude plugin update claude-code@atomicmemory
 # If the plugin is not installed yet:
 claude plugin install claude-code@atomicmemory
 ```
+
+The plugin spawns `@atomicmemory/mcp-server` from the npm registry via `npx`, so no local build is needed. If you're developing the MCP server itself and want Claude Code to load a local checkout instead, override the manifest's `mcpServers.atomicmemory.command`/`args` in a private settings file rather than editing the published manifest.
 
 If `claude plugin marketplace list` shows `atomicmemory` pointing at an old checkout, replace the marketplace entry from this repo first:
 
@@ -191,7 +167,7 @@ plugins/claude-code/
 └── README.md
 ```
 
-The plugin spawns [`@atomicmemory/mcp-server`](../../packages/mcp-server) by `node`-executing the local `dist/bin.js` pointed to by `$ATOMICMEMORY_MCP_SERVER_BIN` — no npm registry lookup. Most semantic memory operations go through the MCP tools. Latency-sensitive prompt retrieval uses `/v1/memories/search/fast` directly, and lifecycle scripts write deterministic records to `/v1/memories/ingest/quick` with `skip_extraction=true` because command hooks cannot talk to Claude Code's already-running stdio MCP child. Hook record content stays clean and human-readable; lifecycle provenance, scope, dedupe keys, session IDs, cwd, transcript paths, tool counts, and validation details are sent separately in request `metadata` and persisted to the memory's `metadata` JSONB column, with `sourceSite` / `sourceUrl` continuing to carry the provider/route identity.
+The plugin spawns [`@atomicmemory/mcp-server`](../../packages/mcp-server) from the npm registry via `npx -y --package=@atomicmemory/mcp-server@^0.1.1 atomicmemory-mcp`, so a `claude plugin install` is self-contained — no local clone or build required. Most semantic memory operations go through the MCP tools. Latency-sensitive prompt retrieval uses `/v1/memories/search/fast` directly, and lifecycle scripts write deterministic records to `/v1/memories/ingest/quick` with `skip_extraction=true` because command hooks cannot talk to Claude Code's already-running stdio MCP child. Hook record content stays clean and human-readable; lifecycle provenance, scope, dedupe keys, session IDs, cwd, transcript paths, tool counts, and validation details are sent separately in request `metadata` and persisted to the memory's `metadata` JSONB column, with `sourceSite` / `sourceUrl` continuing to carry the provider/route identity.
 
 ## Lifecycle hooks
 

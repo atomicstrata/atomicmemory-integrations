@@ -1,10 +1,9 @@
 {
   "mcpServers": {
     "atomicmemory": {
-      "command": "bash",
-      "args": ["-c", "exec node \"$ATOMICMEMORY_MCP_SERVER_BIN\""],
+      "command": "npx",
+      "args": ["-y", "--package=@atomicmemory/mcp-server@^0.1.1", "atomicmemory-mcp"],
       "env_vars": [
-        "ATOMICMEMORY_MCP_SERVER_BIN",
         "ATOMICMEMORY_API_URL",
         "ATOMICMEMORY_API_KEY",
         "ATOMICMEMORY_PROVIDER",

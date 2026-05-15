@@ -117,23 +117,19 @@ hook and MCP configuration.
 
 ### 1. Rebuild after source changes
 
-Build the SDK first if it changed, then rebuild this repo:
+The agent plugins published from this repo (Claude Code, Codex, Cursor, etc.) spawn `@atomicmemory/mcp-server` from the npm registry via `npx`, so end users do not need to clone or build this repo to use the plugins.
+
+When working *on* the integrations repo itself, rebuild changed packages locally:
 
 ```bash
 cd ../atomicmemory-sdk
-pnpm build
+pnpm build         # only if the SDK changed
 
 cd ../atomicmemory-integrations
-pnpm --filter @atomicmemory/mcp-server build
 pnpm build
 ```
 
-`ATOMICMEMORY_MCP_SERVER_BIN` must point at the rebuilt file:
-
-```bash
-export ATOMICMEMORY_MCP_SERVER_BIN="/absolute/path/to/atomicmemory-integrations/packages/mcp-server/dist/bin.js"
-test -f "$ATOMICMEMORY_MCP_SERVER_BIN"
-```
+To make a host agent use your local MCP server checkout instead of the published npm version, override the plugin manifest's `mcpServers.atomicmemory.command`/`args` in a private settings file — for example, point them at `node` + `packages/mcp-server/dist/bin.js`. Do not edit the published manifests in `plugins/*/` for this; the npm-based config is what ships to users.
 
 ### Version bump helper
 
@@ -239,7 +235,7 @@ Run `pnpm bump:plugin-versions <patch|minor|major|x.y.z>` when `.codex-plugin/pl
 
 The Codex marketplace entry does not carry a plugin version; the plugin manifest and skill metadata are the source of truth.
 
-Restart Codex or reinstall the local plugin from the repo/personal marketplace so it reloads `.codex-mcp.json` and `SKILL.md`. Verify `ATOMICMEMORY_MCP_SERVER_BIN`, `ATOMICMEMORY_API_URL`, `ATOMICMEMORY_API_KEY`, `ATOMICMEMORY_PROVIDER`, and at least one `ATOMICMEMORY_SCOPE_*` env var are visible to Codex.
+Restart Codex or reinstall the local plugin from the repo/personal marketplace so it reloads `.codex-mcp.json` and `SKILL.md`. Verify `ATOMICMEMORY_API_URL`, `ATOMICMEMORY_API_KEY`, `ATOMICMEMORY_PROVIDER`, and at least one `ATOMICMEMORY_SCOPE_*` env var are visible to Codex. The MCP server itself is fetched from npm via `npx`, so no local bin path is required.
 
 ### 4. OpenClaw
 
