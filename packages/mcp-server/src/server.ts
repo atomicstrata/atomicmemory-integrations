@@ -184,6 +184,7 @@ export async function buildServer(config: ServerConfig): Promise<Server> {
 async function initClient(config: ServerConfig): Promise<MemoryClient> {
   const providerConfig = {
     apiUrl: config.apiUrl,
+    ...(config.apiKey ? { apiKey: config.apiKey } : {}),
   };
   const providers: MemoryClientConfig['providers'] =
     config.provider === 'mem0'

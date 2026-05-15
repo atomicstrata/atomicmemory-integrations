@@ -24,6 +24,7 @@ const ScopeSchema = z
 const ConfigSchema = z
   .object({
     apiUrl: z.string().url().optional(),
+    apiKey: z.string().optional(),
     provider: z.enum(['atomicmemory', 'mem0']).default(DEFAULT_PROVIDER),
     scope: ScopeSchema.optional(),
   })
@@ -39,6 +40,8 @@ export type Scope = z.infer<typeof ScopeSchema>;
  */
 export function loadConfigFromEnv(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const raw = {
+    apiUrl: cleanOptional(env.ATOMICMEMORY_API_URL),
+    apiKey: cleanOptional(env.ATOMICMEMORY_API_KEY),
     provider: cleanOptional(env.ATOMICMEMORY_PROVIDER),
     scope: parseScope(env),
   };

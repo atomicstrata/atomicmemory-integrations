@@ -2,7 +2,7 @@
 
 Persistent semantic memory for OpenClaw agents. Installed from a local clone of this repo — not distributed through ClawHub or any other marketplace.
 
-The plugin embeds the shared [`@atomicmemory/mcp-server`](../../packages/mcp-server) in-process and registers it as `atomicmemory.memory`. The agent-facing skill uses the same four tools as the other integrations: `memory_search`, `memory_ingest`, `memory_package`, and `memory_list`.
+The plugin embeds the shared [`@atomicmemory/mcp-server`](../../packages/mcp-server) in-process and registers the same four tools as the other integrations: `memory_search`, `memory_ingest`, `memory_package`, and `memory_list`.
 
 ## Install
 
@@ -10,7 +10,7 @@ The plugin embeds the shared [`@atomicmemory/mcp-server`](../../packages/mcp-ser
 git clone https://github.com/atomicstrata/atomicmemory-integrations.git
 cd atomicmemory-integrations/plugins/openclaw
 
-claw plugin install .
+openclaw plugins install .
 ```
 
 See the [full documentation](https://docs.atomicmemory.ai/integrations/coding-agents/openclaw) for config details.
@@ -44,10 +44,10 @@ plugins/openclaw/
 │       ├── skill.yaml        # skill permissions + entrypoint
 │       └── instructions.md   # agent-facing prompt
 └── src/
-    └── index.ts              # plugin onLoad — spawns the MCP server
+    └── index.ts              # plugin register entrypoint — exposes MCP tools
 ```
 
-The plugin embeds [`@atomicmemory/mcp-server`](../../packages/mcp-server) in-process via its `/spawn` export. No subprocess, no extra dependency for the host. All memory semantics live in the shared server.
+The plugin embeds [`@atomicmemory/mcp-server`](../../packages/mcp-server) in-process through its embedded client helper. No subprocess, no separate host dependency. All memory semantics live in the shared server.
 
 ## Memory behavior
 
@@ -77,7 +77,7 @@ Then rebuild and reinstall:
 
 ```bash
 pnpm --filter @atomicmemory/openclaw-plugin build
-claw plugin install .
+openclaw plugins install .
 ```
 
 Restart the OpenClaw host if it keeps plugin modules loaded.

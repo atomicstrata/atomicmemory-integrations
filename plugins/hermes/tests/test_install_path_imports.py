@@ -16,6 +16,7 @@ import importlib
 import importlib.util
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -32,7 +33,37 @@ def _shipped_files() -> list[str]:
     return [f for f in files if f.endswith(".py")]
 
 
+def _provider_install_files() -> list[str]:
+    """Return package files the npm installer should copy into Hermes."""
+    pkg = json.loads((PLUGIN_ROOT / "package.json").read_text(encoding="utf-8"))
+    files = pkg.get("files") or []
+    return [f for f in files if f.endswith(".py") or f in {"plugin.yaml", "README.md"}]
+
+
 class InstallPathImportsResolve(unittest.TestCase):
+    def test_install_mjs_copies_provider_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "atomicmemory"
+            result = subprocess.run(
+                ["node", str(PLUGIN_ROOT / "install.mjs"), "install", "--target", str(target)],
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+
+            self.assertIn(f"Installed AtomicMemory Hermes provider to {target}", result.stdout)
+            for name in _provider_install_files():
+                self.assertTrue((target / name).exists(), f"{name} was not installed")
+            self.assertFalse((target / "install.mjs").exists())
+            self.assertFalse((target / "pyproject.toml").exists())
+
+    def test_pyproject_declares_hermes_entry_point(self) -> None:
+        pyproject = (PLUGIN_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+        self.assertRegex(pyproject, r'(?m)^name\s*=\s*"atomicmemory-hermes"$')
+        self.assertRegex(pyproject, r'(?m)^atomicmemory\s*=\s*"atomicmemory_hermes:register"$')
+        self.assertRegex(pyproject, r'(?m)^atomicmemory_hermes\s*=\s*"\."$')
+
     def test_package_loads_when_directory_is_renamed_to_atomicmemory(self) -> None:
         shipped = _shipped_files()
         self.assertIn("__init__.py", shipped, "package.json must ship __init__.py")
@@ -66,6 +97,32 @@ class InstallPathImportsResolve(unittest.TestCase):
                 sys.path.remove(str(install_root))
                 for mod in list(sys.modules):
                     if mod == "atomicmemory" or mod.startswith("atomicmemory."):
+                        del sys.modules[mod]
+
+    def test_package_loads_via_python_distribution_name(self) -> None:
+        shipped = _shipped_files()
+
+        with tempfile.TemporaryDirectory() as tmp:
+            install_root = Path(tmp) / "site-packages"
+            pkg_dir = install_root / "atomicmemory_hermes"
+            pkg_dir.mkdir(parents=True)
+            for name in shipped:
+                shutil.copy(PLUGIN_ROOT / name, pkg_dir / name)
+
+            sys.path.insert(0, str(install_root))
+            for mod in list(sys.modules):
+                if mod == "atomicmemory_hermes" or mod.startswith("atomicmemory_hermes."):
+                    del sys.modules[mod]
+            try:
+                installed = importlib.import_module("atomicmemory_hermes")
+                self.assertTrue(hasattr(installed, "AtomicMemoryMemoryProvider"))
+                self.assertTrue(hasattr(installed, "register"))
+                tools_mod = importlib.import_module("atomicmemory_hermes.tools")
+                self.assertTrue(hasattr(tools_mod, "TOOL_HANDLERS"))
+            finally:
+                sys.path.remove(str(install_root))
+                for mod in list(sys.modules):
+                    if mod == "atomicmemory_hermes" or mod.startswith("atomicmemory_hermes."):
                         del sys.modules[mod]
 
 

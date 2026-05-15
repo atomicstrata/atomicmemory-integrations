@@ -1,6 +1,6 @@
 {
   "name": "@atomicmemory/hermes-plugin",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "AtomicMemory native Hermes memory provider — Python SDK-backed, cross-tool memory by default.",
   "publishConfig": {
     "access": "public",
@@ -12,7 +12,11 @@
     "url": "git+https://github.com/atomicstrata/atomicmemory-integrations.git",
     "directory": "plugins/hermes"
   },
+  "bin": {
+    "atomicmemory-hermes": "./install.mjs"
+  },
   "files": [
+    "CHANGELOG.md",
     "__init__.py",
     "client.py",
     "config.py",
@@ -20,6 +24,8 @@
     "tools.py",
     "breaker.py",
     "worker.py",
+    "install.mjs",
+    "pyproject.toml",
     "plugin.yaml",
     "README.md"
   ],
