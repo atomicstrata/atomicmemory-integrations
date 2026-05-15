@@ -13,7 +13,7 @@ cd atomicmemory-integrations/plugins/openclaw
 openclaw plugins install .
 ```
 
-See the [full documentation](https://docs.atomicmemory.ai/integrations/coding-agents/openclaw) for config details.
+See the [full documentation](https://docs.atomicstrata.ai/integrations/coding-agents/openclaw) for config details.
 
 ## Configure
 

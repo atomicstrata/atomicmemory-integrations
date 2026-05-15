@@ -1,9 +1,10 @@
 """Regression: package must import under the installed Hermes path.
 
-Hermes loads memory provider plugins from `$HERMES_HOME/plugins/memory/<name>/`.
-After install, the directory is named `atomicmemory/` — not `plugins/hermes/`
-— so any `from plugins.hermes.<x> import ...` import will fail with
-ModuleNotFoundError. All in-package imports must be relative.
+Hermes loads user-installed memory provider plugins from
+`$HERMES_HOME/plugins/<name>/`. After install, the directory is named
+`atomicmemory/` — not `plugins/hermes/` — so any
+`from plugins.hermes.<x> import ...` import will fail with ModuleNotFoundError.
+All in-package imports must be relative.
 
 This test simulates the installed layout by copying every shipped file into a
 temp dir named `atomicmemory/`, then loading it as a package via importlib.
@@ -56,6 +57,25 @@ class InstallPathImportsResolve(unittest.TestCase):
                 self.assertTrue((target / name).exists(), f"{name} was not installed")
             self.assertFalse((target / "install.mjs").exists())
             self.assertFalse((target / "pyproject.toml").exists())
+
+    def test_install_mjs_default_target_matches_hermes_discovery(self) -> None:
+        # Hermes scans `$HERMES_HOME/plugins/<name>/` for user-installed memory
+        # providers (see hermes-agent/plugins/memory/__init__.py). Installing one
+        # level deeper (e.g. plugins/memory/atomicmemory/) hides the provider
+        # from `hermes memory setup`.
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                ["node", str(PLUGIN_ROOT / "install.mjs"), "install"],
+                capture_output=True,
+                check=True,
+                text=True,
+                env={"HERMES_HOME": tmp, "PATH": __import__("os").environ.get("PATH", "")},
+            )
+            expected = Path(tmp) / "plugins" / "atomicmemory"
+            self.assertIn(f"Installed AtomicMemory Hermes provider to {expected}", result.stdout)
+            self.assertTrue((expected / "__init__.py").exists())
+            self.assertFalse((Path(tmp) / "plugins" / "memory").exists(),
+                             "installer must not nest under plugins/memory/")
 
     def test_pyproject_declares_hermes_entry_point(self) -> None:
         pyproject = (PLUGIN_ROOT / "pyproject.toml").read_text(encoding="utf-8")

@@ -185,12 +185,13 @@ claude plugin update claude-code@atomicmemory
 
 Then fully restart Claude Code. Running Claude sessions can keep the previous hook registration in memory. Do not treat `~/.claude/plugins/cache/...` as the source of truth; it is only Claude's installed cache.
 
-Required env before launching Claude Code:
+Environment is **optional** for local mode — the plugin defaults to a local AtomicMemory core at `http://127.0.0.1:3050`, derives `ATOMICMEMORY_SCOPE_USER` from the host OS, and uses `ATOMICMEMORY_CAPTURE_LEVEL=balanced`. See `plugins/claude-code/README.md` for the full defaults table.
+
+Set these before launching Claude Code only when you need to override a default (e.g. to talk to a hosted AtomicMemory service):
 
 ```bash
 export ATOMICMEMORY_API_URL="https://memory.yourco.com"
 export ATOMICMEMORY_API_KEY="am_live_..."
-export ATOMICMEMORY_PROVIDER="atomicmemory"
 export ATOMICMEMORY_SCOPE_USER="$USER"
 export ATOMICMEMORY_CAPTURE_LEVEL="balanced"
 ```
@@ -278,8 +279,8 @@ For dev installs, symlink the plugin into Hermes' memory directory. Hermes
 installs the published Python SDK from `plugins/hermes/plugin.yaml`:
 
 ```bash
-mkdir -p "$HERMES_HOME/plugins/memory"
-ln -s "$(pwd)/plugins/hermes" "$HERMES_HOME/plugins/memory/atomicmemory"
+mkdir -p "$HERMES_HOME/plugins"
+ln -s "$(pwd)/plugins/hermes" "$HERMES_HOME/plugins/atomicmemory"
 hermes memory setup     # select "atomicmemory"
 hermes memory status    # confirm "atomicmemory" is active
 ```
