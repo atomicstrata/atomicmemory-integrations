@@ -26,6 +26,7 @@ hooks, tool schemas. Memory semantics flow through the published Python SDK.
 
 - Hermes Agent installed
 - AtomicMemory core URL exported as `ATOMICMEMORY_API_URL`
+- AtomicMemory bearer key exported as `ATOMICMEMORY_API_KEY` when using the Core Quickstart or any protected service
 
 ## Install
 
@@ -36,6 +37,7 @@ clone is required.
 ```bash
 npx -y @atomicmemory/hermes-plugin install
 export ATOMICMEMORY_API_URL="http://127.0.0.1:3050"
+export ATOMICMEMORY_API_KEY="local-dev-key"
 ```
 
 Then select and verify the provider:
@@ -69,7 +71,7 @@ have a default API URL and fails to start if `ATOMICMEMORY_API_URL` is unset.
 | Env var | Purpose |
 |---|---|
 | `ATOMICMEMORY_API_URL` | AtomicMemory core URL. Required. |
-| `ATOMICMEMORY_API_KEY` | Bearer credential for AtomicMemory core. Optional. |
+| `ATOMICMEMORY_API_KEY` | Bearer credential for the Core Quickstart service or any protected AtomicMemory core. |
 | `ATOMICMEMORY_PROVIDER` | SDK provider name. Defaults to `atomicmemory`. |
 | `ATOMICMEMORY_SCOPE_USER` | Hermes user identity. Defaults to `$USER`. |
 | `ATOMICMEMORY_MEMORY_SCOPE` | `shared` (default) or `siloed`. |

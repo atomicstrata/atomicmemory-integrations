@@ -1,6 +1,6 @@
 {
   "name": "@atomicmemory/mcp-server",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server exposing AtomicMemory's ingest / search / package tools to any MCP-compatible agent.",
   "type": "module",
   "main": "dist/index.js",
@@ -24,7 +24,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "repository": {
     "type": "git",
