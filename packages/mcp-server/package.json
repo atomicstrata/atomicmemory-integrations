@@ -13,6 +13,10 @@
     "./spawn": {
       "types": "./dist/spawn.d.ts",
       "import": "./dist/spawn.js"
+    },
+    "./embedded-client": {
+      "types": "./dist/embedded-client.d.ts",
+      "import": "./dist/embedded-client.js"
     }
   },
   "bin": {

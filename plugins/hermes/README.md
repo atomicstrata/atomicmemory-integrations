@@ -24,19 +24,18 @@ hooks, tool schemas. Memory semantics flow through the published Python SDK.
 
 ## Prerequisites
 
-- Hermes Agent installed and `HERMES_HOME` set
+- Hermes Agent installed
 - AtomicMemory core URL exported as `ATOMICMEMORY_API_URL`
 
-## Install (dev)
+## Install
 
-The simplest dev install symlinks the plugin into Hermes' memory directory.
-Hermes installs the published `atomicmemory` SDK from `plugin.yaml`.
+Install the provider from the published npm package. The installer copies the
+Python provider files into Hermes' memory-provider directory; no repository
+clone is required.
 
 ```bash
-cd /path/to/atomicmemory-integrations
-mkdir -p "$HERMES_HOME/plugins/memory"
-ln -s "$(pwd)/plugins/hermes" "$HERMES_HOME/plugins/memory/atomicmemory"
-export ATOMICMEMORY_API_URL="http://localhost:3050"
+npx -y @atomicmemory/hermes-plugin install
+export ATOMICMEMORY_API_URL="http://127.0.0.1:3050"
 ```
 
 Then select and verify the provider:
@@ -46,6 +45,14 @@ hermes memory setup
 # select "atomicmemory"
 hermes memory status
 # confirm "atomicmemory" is active
+```
+
+For source development, symlink the checkout instead:
+
+```bash
+cd /path/to/atomicmemory-integrations
+mkdir -p "$HERMES_HOME/plugins/memory"
+ln -s "$(pwd)/plugins/hermes" "$HERMES_HOME/plugins/memory/atomicmemory"
 ```
 
 ## Config
@@ -144,7 +151,7 @@ run while AtomicMemory is temporarily unavailable.
 
 | Symptom | Likely cause |
 |---|---|
-| Provider does not appear in `hermes memory setup` | Wrong install path. Memory providers must live under `$HERMES_HOME/plugins/memory/<name>/`, not `$HERMES_HOME/plugins/<name>/`. |
+| Provider does not appear in `hermes memory setup` | Wrong install path. User-installed memory providers must live under `$HERMES_HOME/plugins/memory/<name>/`. |
 | `is_available()` returns False | `ATOMICMEMORY_API_URL` unset, or the Hermes Python environment did not install the `atomicmemory` dependency from `plugin.yaml`. |
 | Import fails at startup | The Hermes Python environment is missing the SDK dependency from `plugin.yaml`. |
 | Calls fail with `PROVIDER_UNSUPPORTED` while `memory_scope=siloed` | The configured SDK provider is not the AtomicMemory core (e.g. it's `mem0`). Either switch `ATOMICMEMORY_PROVIDER=atomicmemory` or move to `memory_scope=shared`. |

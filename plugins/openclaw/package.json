@@ -5,6 +5,11 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -20,6 +25,7 @@
   "scripts": {
     "build": "pnpm --dir ../../packages/mcp-server build && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm build && node --test 'dist/**/*.test.js'",
     "lint": "tsc -p tsconfig.json --noEmit",
     "prepack": "pnpm build"
   },

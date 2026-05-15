@@ -11,6 +11,7 @@
     "packages/mcp-server/src/spawn.ts",
     "packages/*/src/**/*.test.ts",
     "plugins/openclaw/src/index.ts",
+    "plugins/*/src/**/*.test.ts",
     "adapters/vercel-ai-sdk/src/index.ts",
     "adapters/*/src/**/*.test.ts"
   ],

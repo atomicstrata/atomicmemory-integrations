@@ -1,6 +1,6 @@
 {
   "name": "atomicmemory",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Persistent semantic memory for Claude Code — user preferences, project context, prior decisions, and codebase facts that survive across sessions.",
   "author": {
     "name": "AtomicMemory",
@@ -14,7 +14,10 @@
       "args": ["-c", "exec node \"$ATOMICMEMORY_MCP_SERVER_BIN\""],
       "env": {
         "ATOMICMEMORY_MCP_SERVER_BIN": "${ATOMICMEMORY_MCP_SERVER_BIN}",
+        "ATOMICMEMORY_API_URL": "${ATOMICMEMORY_API_URL}",
+        "ATOMICMEMORY_API_KEY": "${ATOMICMEMORY_API_KEY}",
         "ATOMICMEMORY_PROVIDER": "${ATOMICMEMORY_PROVIDER:-atomicmemory}",
+        "ATOMICMEMORY_SCOPE_USER": "${ATOMICMEMORY_SCOPE_USER}",
         "ATOMICMEMORY_SCOPE_AGENT": "${ATOMICMEMORY_SCOPE_AGENT:-}",
         "ATOMICMEMORY_SCOPE_NAMESPACE": "${ATOMICMEMORY_SCOPE_NAMESPACE:-}",
         "ATOMICMEMORY_SCOPE_THREAD": "${ATOMICMEMORY_SCOPE_THREAD:-}"

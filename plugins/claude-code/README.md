@@ -56,6 +56,7 @@ export ATOMICMEMORY_CAPTURE_LEVEL="balanced" # minimal|balanced|full
 ```
 
 `ATOMICMEMORY_MCP_SERVER_BIN`, `ATOMICMEMORY_API_URL`, `ATOMICMEMORY_API_KEY`, `ATOMICMEMORY_PROVIDER`, `ATOMICMEMORY_SCOPE_USER`, and `ATOMICMEMORY_CAPTURE_LEVEL` are required for the Claude Code plugin and hooks. Optional scope vars narrow retrieval and lifecycle record metadata.
+If `ATOMICMEMORY_SCOPE_USER` is empty, the MCP server derives a local user from the host OS; set it explicitly when multiple operators share a machine or when you need a stable cross-machine identity.
 
 #### Local extraction with Claude Code auth
 

@@ -19,12 +19,16 @@ test('loadConfigFromEnv defaults URL, provider, and user scope', () => {
 test('loadConfigFromEnv keeps explicit scope overrides', () => {
   const config = loadConfigFromEnv({
     USER: 'machine-user',
+    ATOMICMEMORY_API_URL: 'https://memory.example.com/',
+    ATOMICMEMORY_API_KEY: 'am-test-key',
     ATOMICMEMORY_SCOPE_USER: 'configured-user',
     ATOMICMEMORY_SCOPE_AGENT: 'codex',
     ATOMICMEMORY_SCOPE_NAMESPACE: 'repo',
     ATOMICMEMORY_SCOPE_THREAD: 'thread-1',
   } as NodeJS.ProcessEnv);
 
+  assert.equal(config.apiUrl, 'https://memory.example.com');
+  assert.equal(config.apiKey, 'am-test-key');
   assert.deepEqual(config.scope, {
     user: 'configured-user',
     agent: 'codex',
@@ -39,6 +43,16 @@ test('validateConfig accepts plugin config without URL, key, or scope', () => {
   assert.equal(config.apiUrl, 'http://127.0.0.1:3050');
   assert.equal(config.provider, 'atomicmemory');
   assert.ok(config.scope?.user);
+});
+
+test('validateConfig accepts explicit plugin api key', () => {
+  const config = validateConfig({
+    apiUrl: 'https://memory.example.com',
+    apiKey: 'am-plugin-key',
+  });
+
+  assert.equal(config.apiUrl, 'https://memory.example.com');
+  assert.equal(config.apiKey, 'am-plugin-key');
 });
 
 test('validateConfig requires explicit apiUrl for mem0', () => {

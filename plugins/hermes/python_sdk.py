@@ -252,15 +252,7 @@ def _is_atomicmemory_module(name: str) -> bool:
 
 
 def _plugin_roots() -> set[Path]:
-    roots = {Path(__file__).resolve().parent}
-    module = sys.modules.get("atomicmemory")
-    file_name = getattr(module, "__file__", None)
-    if file_name:
-        try:
-            roots.add(Path(file_name).resolve().parent)
-        except OSError:
-            pass
-    return roots
+    return {Path(__file__).resolve().parent}
 
 
 def _remove_plugin_import_roots(plugin_roots: set[Path]) -> list[tuple[int, str]]:

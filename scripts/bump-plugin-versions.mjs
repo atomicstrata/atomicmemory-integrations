@@ -56,6 +56,12 @@ const targets = [
 
   jsonPathTarget('plugins/hermes/package.json', ['version']),
   regexTarget(
+    'plugins/hermes/pyproject.toml',
+    'project.version',
+    /^version\s*=\s*"([^"]+)"$/m,
+    (version) => `version = "${version}"`,
+  ),
+  regexTarget(
     'plugins/hermes/plugin.yaml',
     'version',
     /^version:\s*([^\s]+)\s*$/m,

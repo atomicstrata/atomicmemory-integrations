@@ -115,6 +115,22 @@ class PythonSdkPathResolution(unittest.TestCase):
         self.assertIs(sys.modules.get("atomicmemory"), prior.get("atomicmemory"))
         self.assertEqual(sys.path, prior_path)
 
+    def test_loader_survives_cached_published_sdk_modules(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            sdk_root = _write_fake_sdk(Path(tmp) / "site-packages")
+            prior = _stash_atomicmemory_modules()
+            prior_path = list(sys.path)
+            sys.path.insert(0, str(sdk_root))
+            try:
+                first = _load_sdk_types()
+                second = _load_sdk_types()
+            finally:
+                _restore_atomicmemory_modules(prior)
+                sys.path[:] = prior_path
+
+        self.assertEqual(first.MemoryClient.__name__, "MemoryClient")
+        self.assertEqual(second.MemoryClient.__name__, "MemoryClient")
+
 
 def _client_with_fakes(*, has_atomic: bool = True) -> tuple[PythonSdkAtomicMemoryClient, "FakeMemoryClient"]:
     FakeMemoryClient.next_has_atomic = has_atomic
