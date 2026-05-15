@@ -41,12 +41,13 @@ am_load_env() {
   }
 
   AM_PROVIDER="${ATOMICMEMORY_PROVIDER:-atomicmemory}"
-  AM_API_URL="http://127.0.0.1:3050"
+  AM_API_URL="${ATOMICMEMORY_API_URL:-http://127.0.0.1:3050}"
+  AM_API_KEY="${ATOMICMEMORY_API_KEY:-}"
   AM_SCOPE_USER="${ATOMICMEMORY_SCOPE_USER:-$(am_default_scope_user)}"
   AM_SCOPE_AGENT="${ATOMICMEMORY_SCOPE_AGENT:-}"
   AM_SCOPE_NAMESPACE="${ATOMICMEMORY_SCOPE_NAMESPACE:-}"
   AM_SCOPE_THREAD="${ATOMICMEMORY_SCOPE_THREAD:-}"
-  AM_CAPTURE_LEVEL="${ATOMICMEMORY_CAPTURE_LEVEL:-}"
+  AM_CAPTURE_LEVEL="${ATOMICMEMORY_CAPTURE_LEVEL:-balanced}"
 
   AM_API_URL="${AM_API_URL%/}"
 
@@ -127,6 +128,19 @@ am_scope_json() {
      + (if $thread != "" then {thread: $thread} else {} end)'
 }
 
+am_auth_curl_args() {
+  # Populate the global AM_AUTH_CURL_ARGS array with the Bearer
+  # auth header pair when AM_API_KEY is set, or leave it empty.
+  # Matches the SDK's wire convention and core's `requireBearer`
+  # middleware (`Authorization: Bearer <key>`). Callers expand
+  # with `${AM_AUTH_CURL_ARGS[@]+"${AM_AUTH_CURL_ARGS[@]}"}` so the
+  # empty-array case is safe under `set -u` on bash 3.2.
+  AM_AUTH_CURL_ARGS=()
+  if [ -n "${AM_API_KEY:-}" ]; then
+    AM_AUTH_CURL_ARGS=("-H" "Authorization: Bearer $AM_API_KEY")
+  fi
+}
+
 am_search_fast() {
   local query="${1:-}"
   local limit="${2:-5}"
@@ -152,9 +166,11 @@ am_search_fast() {
   local timeout_seconds
   timeout_seconds=$(am_positive_int ATOMICMEMORY_SEARCH_TIMEOUT_SECONDS 3) || return 1
 
+  am_auth_curl_args
   curl -s --max-time "$timeout_seconds" \
     -X POST "$AM_API_URL/v1/memories/search/fast" \
     -H "Content-Type: application/json" \
+    ${AM_AUTH_CURL_ARGS[@]+"${AM_AUTH_CURL_ARGS[@]}"} \
     -d "$body"
 }
 
@@ -466,11 +482,13 @@ am_post_quick_ingest() {
   local http_code
   local timeout_seconds
   timeout_seconds=$(am_positive_int ATOMICMEMORY_WRITE_TIMEOUT_SECONDS 8) || return 1
+  am_auth_curl_args
   http_code=$(curl -sS --max-time "$timeout_seconds" \
     -o /dev/null \
     -w "%{http_code}" \
     -X POST "$AM_API_URL/v1/memories/ingest/quick" \
     -H "Content-Type: application/json" \
+    ${AM_AUTH_CURL_ARGS[@]+"${AM_AUTH_CURL_ARGS[@]}"} \
     -d "$body") || return 1
 
   case "$http_code" in

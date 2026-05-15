@@ -13,7 +13,7 @@ has touched (Claude Code, Codex, the web extension, etc.). Set
 
 ```
 Hermes Agent (Python)
-  → plugins/memory/atomicmemory/__init__.py
+  → $HERMES_HOME/plugins/atomicmemory/__init__.py
       → AtomicMemoryClient (Python protocol)
           → PythonSdkAtomicMemoryClient
               → published atomicmemory Python SDK MemoryClient
@@ -53,8 +53,8 @@ For source development, symlink the checkout instead:
 
 ```bash
 cd /path/to/atomicmemory-integrations
-mkdir -p "$HERMES_HOME/plugins/memory"
-ln -s "$(pwd)/plugins/hermes" "$HERMES_HOME/plugins/memory/atomicmemory"
+mkdir -p "$HERMES_HOME/plugins"
+ln -s "$(pwd)/plugins/hermes" "$HERMES_HOME/plugins/atomicmemory"
 ```
 
 ## Config
@@ -153,7 +153,7 @@ run while AtomicMemory is temporarily unavailable.
 
 | Symptom | Likely cause |
 |---|---|
-| Provider does not appear in `hermes memory setup` | Wrong install path. User-installed memory providers must live under `$HERMES_HOME/plugins/memory/<name>/`. |
+| Provider does not appear in `hermes memory setup` | Wrong install path. User-installed memory providers must live directly under `$HERMES_HOME/plugins/<name>/` (the `plugins/memory/` layout is for providers bundled inside hermes-agent itself). |
 | `is_available()` returns False | `ATOMICMEMORY_API_URL` unset, or the Hermes Python environment did not install the `atomicmemory` dependency from `plugin.yaml`. |
 | Import fails at startup | The Hermes Python environment is missing the SDK dependency from `plugin.yaml`. |
 | Calls fail with `PROVIDER_UNSUPPORTED` while `memory_scope=siloed` | The configured SDK provider is not the AtomicMemory core (e.g. it's `mem0`). Either switch `ATOMICMEMORY_PROVIDER=atomicmemory` or move to `memory_scope=shared`. |

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.13 - 2026-05-15
+
+### Fixed
+
+- Installer now writes the provider to `$HERMES_HOME/plugins/atomicmemory/`, the path Hermes actually scans for user-installed memory providers. Previously the files landed under `$HERMES_HOME/plugins/memory/atomicmemory/`, where Hermes' discovery never looked, so `hermes memory setup` did not list AtomicMemory as a choice.
+- Normalized the npm `bin` path in `package.json` so the binary resolves on platforms that reject the `./install.mjs` form.
+
 ## 0.1.12 - 2026-05-14
 
 ### Fixed

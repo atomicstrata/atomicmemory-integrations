@@ -16,24 +16,32 @@ brew install jq
 sudo apt-get install -y jq
 ```
 
-### 2. Export shell env vars
+### 2. Configure (optional in local mode)
 
-The MCP server and the lifecycle hook scripts read their config from the shell environment. Export these in `~/.zshrc` / `~/.bashrc` before launching Claude Code:
+The MCP server and the lifecycle hook scripts read their config from the shell environment. None of the `ATOMICMEMORY_*` variables are required to run the plugin against a local AtomicMemory core — the documented defaults are:
+
+| Var | Local-mode default |
+|---|---|
+| `ATOMICMEMORY_API_URL` | `http://127.0.0.1:3050` |
+| `ATOMICMEMORY_API_KEY` | not required |
+| `ATOMICMEMORY_PROVIDER` | `atomicmemory` |
+| `ATOMICMEMORY_SCOPE_USER` | derived from the host OS user |
+| `ATOMICMEMORY_CAPTURE_LEVEL` | `balanced` |
+
+Set them only when you need to override a default (for example, to talk to a hosted AtomicMemory service):
 
 ```bash
 export ATOMICMEMORY_API_URL="https://memory.yourco.com"
 export ATOMICMEMORY_API_KEY="am_live_…"
-export ATOMICMEMORY_PROVIDER="atomicmemory"
 export ATOMICMEMORY_SCOPE_USER="$USER"
 export ATOMICMEMORY_CAPTURE_LEVEL="balanced" # minimal|balanced|full
-# Optional:
+# Optional scope:
 # export ATOMICMEMORY_SCOPE_NAMESPACE="<repo-or-project>"
 # export ATOMICMEMORY_SCOPE_AGENT="claude-code"
 # export ATOMICMEMORY_SCOPE_THREAD="<thread-id>"
 ```
 
-`ATOMICMEMORY_API_URL`, `ATOMICMEMORY_API_KEY`, `ATOMICMEMORY_PROVIDER`, `ATOMICMEMORY_SCOPE_USER`, and `ATOMICMEMORY_CAPTURE_LEVEL` are required for the Claude Code plugin and hooks. Optional scope vars narrow retrieval and lifecycle record metadata.
-If `ATOMICMEMORY_SCOPE_USER` is empty, the MCP server derives a local user from the host OS; set it explicitly when multiple operators share a machine or when you need a stable cross-machine identity.
+Set `ATOMICMEMORY_SCOPE_USER` explicitly when multiple operators share a machine or when you need a stable cross-machine identity; otherwise the MCP server derives one from the host OS.
 
 #### Local extraction with Claude Code auth
 
@@ -54,8 +62,8 @@ for hosted/team deployments where a server would run under one operator's
 Claude Code subscription. Embeddings still use core's configured embedding
 provider; select a local embedding provider separately for a fully local setup.
 
-- `_API_URL` / `_API_KEY` / `_PROVIDER` / `_SCOPE_USER` — needed by **both** the MCP server (for `memory_search` / `memory_ingest` / `memory_package` tool calls) and lifecycle hooks.
-- `_CAPTURE_LEVEL` — controls lifecycle write volume. Valid values are `minimal`, `balanced`, and `full`.
+- `_API_URL` / `_API_KEY` / `_PROVIDER` / `_SCOPE_USER` — read by **both** the MCP server (for `memory_search` / `memory_ingest` / `memory_package` tool calls) and lifecycle hooks. All optional in local mode (see defaults above).
+- `_CAPTURE_LEVEL` — controls lifecycle write volume. Valid values are `minimal`, `balanced`, and `full`. Defaults to `balanced` when unset; invalid values still fail closed.
 - `_SCOPE_NAMESPACE` — used by both, as a per-project isolation boundary.
 - `_SCOPE_AGENT` / `_SCOPE_THREAD` — forwarded to the MCP server as the request scope. The direct prompt-search path uses the core fast-search endpoint's supported user/namespace scope.
 
@@ -73,7 +81,7 @@ Optional capture controls:
 - `ATOMICMEMORY_TASK_MAX_DESCRIPTION_CHARS=600` controls the maximum cleaned task description excerpt stored by `TaskCompleted`. If set, it must be a positive integer.
 - `ATOMICMEMORY_SEMANTIC_PROMPTS_ENABLED=false` disables extra Stop prompts that ask Claude to extract semantic learnings. If set, it must be `true` or `false`.
 
-If required config is missing, helper tools are unavailable, or numeric/boolean env vars are invalid, hooks surface the error instead of running in a degraded mode.
+If a helper tool is unavailable, an explicit `ATOMICMEMORY_*` value is invalid (bogus capture level, non-numeric integer var, non-boolean flag), or core is unreachable, hooks surface the error instead of running in a degraded mode.
 
 ### 3. Install the plugin
 

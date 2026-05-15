@@ -2,8 +2,10 @@
 /**
  * Install the AtomicMemory Hermes provider from the published npm package.
  *
- * Hermes memory providers are filesystem plugins under
- * `$HERMES_HOME/plugins/memory/<name>`. The npm package already contains the
+ * Hermes discovers user-installed memory providers as direct children of
+ * `$HERMES_HOME/plugins/<name>` (bundled providers live under
+ * `plugins/memory/<name>` inside hermes-agent itself, but user-installed
+ * plugins are flat under `plugins/`). The npm package already contains the
  * Python provider files, so this installer copies only that managed provider
  * surface into the active Hermes profile without requiring a Git checkout.
  */
@@ -53,7 +55,7 @@ function parseArgs(argv) {
 
 function defaultTarget() {
   const hermesHome = process.env.HERMES_HOME || defaultHermesHome();
-  return join(hermesHome, 'plugins', 'memory', 'atomicmemory');
+  return join(hermesHome, 'plugins', 'atomicmemory');
 }
 
 function defaultHermesHome() {
@@ -90,10 +92,10 @@ function printHelp() {
   console.log(`Usage: atomicmemory-hermes [install] [--target <dir>]
 
 Installs the AtomicMemory Hermes memory provider into:
-  $HERMES_HOME/plugins/memory/atomicmemory
+  $HERMES_HOME/plugins/atomicmemory
 
 When HERMES_HOME is unset, defaults to:
-  $HOME/.hermes/plugins/memory/atomicmemory`);
+  $HOME/.hermes/plugins/atomicmemory`);
 }
 
 try {
