@@ -8,7 +8,26 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import plugin, { createOpenClawPlugin } from './index.js';
+
+const PLUGIN_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const EXPECTED_TOOL_NAMES = ['memory_ingest', 'memory_list', 'memory_package', 'memory_search'];
+
+test('manifest declares contracts.tools matching the tools register() exposes', () => {
+  const manifest = JSON.parse(
+    readFileSync(resolve(PLUGIN_ROOT, 'openclaw.plugin.json'), 'utf8'),
+  );
+  assert.ok(manifest.contracts, 'openclaw.plugin.json must declare a contracts block');
+  assert.ok(Array.isArray(manifest.contracts.tools), 'contracts.tools must be an array');
+  assert.deepEqual(
+    [...manifest.contracts.tools].sort(),
+    EXPECTED_TOOL_NAMES,
+    'contracts.tools must match the tools register() actually exposes',
+  );
+});
 
 test('register exposes memory tools without requiring provider config', () => {
   const tools: Array<{ name: string }> = [];
