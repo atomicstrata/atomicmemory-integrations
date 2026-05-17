@@ -14,13 +14,13 @@ AtomicMemory adapter for the [Vercel AI SDK](https://sdk.vercel.ai/docs). Compos
 
 The adapter intentionally does **not** import from `ai` — it operates on the SDK's `Message` type (`content: string`) and delegates the model call to the caller. That keeps it insulated from `ai` version churn.
 
-## Status: pre-publish local development
+## Install
 
-This package is intended to publish as `@atomicmemory/vercel-ai`. Until
-`@atomicmemory/sdk` is published and pinned to a registry version, it depends
-on the SDK through the monorepo's workspace `file:` spec. See the
-[mcp-server status note](../../packages/mcp-server/README.md) for the
-clone-and-build flow.
+```bash
+pnpm add @atomicmemory/vercel-ai @atomicmemory/sdk
+```
+
+The adapter depends on the published [`@atomicmemory/sdk`](https://www.npmjs.com/package/@atomicmemory/sdk) at runtime. No workspace clone or local build is required to use it.
 
 ## Scope: text content only
 

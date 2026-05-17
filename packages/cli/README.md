@@ -8,35 +8,17 @@ command-line tool.
 
 ## Install
 
-From a local checkout, build and link globally:
-
 ```bash
-pnpm --filter @atomicmemory/cli build
-cd packages/cli
-pnpm link --global
-
-atomicmemory
+npm install -g @atomicmemory/cli
 ```
+
+`@atomicmemory/cli` is published on the public npm registry and depends on
+the published [`@atomicmemory/sdk`](https://www.npmjs.com/package/@atomicmemory/sdk)
+at runtime.
 
 With no arguments in a real terminal, `atomicmemory` opens the interactive
 Ink UI. Use `atomicmemory help` for the plain command reference, or
 `atomicmemory --no-interactive` to keep the static help behavior.
-
-If pnpm reports `ERR_PNPM_NO_GLOBAL_BIN_DIR`, initialize pnpm's global bin
-directory first, then restart or source your shell config:
-
-```bash
-pnpm setup
-source ~/.zshrc
-cd packages/cli
-pnpm link --global
-```
-
-You can also test without global linking:
-
-```bash
-node packages/cli/dist/bin.js
-```
 
 The interactive UI can also be opened explicitly:
 
@@ -45,15 +27,23 @@ atomicmemory ui
 atomicmemory --interactive
 ```
 
-Public npm install will be:
+### Building from source (contributors)
+
+To work on the CLI itself, build from a checkout of `atomicmemory-integrations`:
 
 ```bash
-npm install -g @atomicmemory/cli
+pnpm --filter @atomicmemory/cli build
+cd packages/cli
+pnpm link --global
 ```
 
-That requires publishing `@atomicmemory/sdk` first. Until the SDK
-exists on npm, this package keeps the same local SDK `file:` dependency used by
-the rest of the integrations repo.
+If pnpm reports `ERR_PNPM_NO_GLOBAL_BIN_DIR`, initialize pnpm's global bin
+directory first (`pnpm setup`, then restart your shell). You can also run the
+built binary directly without global linking:
+
+```bash
+node packages/cli/dist/bin.js
+```
 
 ## Usage
 

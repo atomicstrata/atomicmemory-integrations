@@ -4,12 +4,17 @@ Persistent semantic memory for [Cursor](https://cursor.com/) through Cursor MCP 
 
 ## Status
 
-Cursor support is available today as a manual local integration. Copy the MCP
-config and Cursor rule template into a Cursor project or global Cursor MCP
-config.
+Cursor support is available today as a manual local integration using the
+AtomicMemory MCP server and Cursor project rules. Copy the MCP config and rule
+template into a Cursor project or your global `~/.cursor` directory, or run
+`atomicmemory setup cursor` for an equivalent fallback that prints the same
+files.
 
 A packaged Cursor plugin and Cursor Cloud deployment are planned but not yet
-available.
+available. Marketplace submission is gated on verifying Cursor's plugin
+manifest format against the current Cursor validator; until that lands, this
+package stays private and the supported install paths are manual copy or
+`atomicmemory setup cursor`.
 
 ## What's inside
 
@@ -19,13 +24,14 @@ plugins/cursor/
 │   ├── mcp.json                    # Project MCP config template
 │   └── rules/
 │       └── atomicmemory.mdc        # Always-on Cursor memory rule
+├── __tests__/                      # Manifest contract tests
 ├── package.json                    # Source-only package metadata
 └── README.md
 ```
 
-Cursor does not currently use a plugin marketplace in this repo. This
-integration is manual: copy the MCP config and rule template into a Cursor
-project or into your global Cursor MCP config.
+Contract tests in `__tests__/plugin-manifest.test.mjs` lock the MCP server
+shape and the rule frontmatter so accidental drift surfaces before reaching
+operators copying these files into their own Cursor configs.
 
 ## Configure environment
 

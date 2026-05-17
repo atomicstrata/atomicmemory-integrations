@@ -16,5 +16,8 @@
     "logo.svg",
     "marketplace.example.json",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "test": "node --test '__tests__/**/*.test.mjs'"
+  }
 }

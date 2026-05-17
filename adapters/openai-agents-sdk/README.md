@@ -4,15 +4,11 @@ Adapter for the [OpenAI Agents SDK for TypeScript](https://openai.github.io/open
 
 ## Install
 
-This package is intended to publish as `@atomicmemory/openai-agents`. Until
-`@atomicmemory/sdk` is published and pinned to a registry version, build it
-from the monorepo:
-
 ```bash
-pnpm --filter @atomicmemory/openai-agents build
+pnpm add @atomicmemory/openai-agents @atomicmemory/sdk @openai/agents
 ```
 
-In a local workspace, import from the package once it is linked by `pnpm-workspace.yaml`:
+The adapter depends on the published [`@atomicmemory/sdk`](https://www.npmjs.com/package/@atomicmemory/sdk) and the official [`@openai/agents`](https://www.npmjs.com/package/@openai/agents) SDK at runtime. No workspace clone or local build is required to use it.
 
 ```ts
 import { MemoryClient } from '@atomicmemory/sdk';

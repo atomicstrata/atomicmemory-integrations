@@ -147,6 +147,31 @@
       "flags": ["--online", "--api-key-stdin"]
     },
     {
+      "name": "setup",
+      "usage": "atomicmemory setup <codex|cursor> [--target DIR]",
+      "summary": "Generate host MCP config for Codex or Cursor as a fallback to native plugin install.",
+      "category": "setup",
+      "allowed_outputs": ["text", "json", "agent"],
+      "children": [
+        {
+          "name": "codex",
+          "usage": "atomicmemory setup codex [--target DIR]",
+          "summary": "Print Codex MCP config snippets (TOML for ~/.codex/config.toml and the equivalent `codex mcp add` command)."
+        },
+        {
+          "name": "cursor",
+          "usage": "atomicmemory setup cursor [--target DIR]",
+          "summary": "Print Cursor MCP config (.cursor/mcp.json) and the always-on memory rule (.cursor/rules/atomicmemory.mdc)."
+        }
+      ],
+      "flags": ["--target <dir>"],
+      "examples": [
+        "atomicmemory setup codex",
+        "atomicmemory setup cursor",
+        "atomicmemory setup cursor --target ./.cursor"
+      ]
+    },
+    {
       "name": "add",
       "usage": "atomicmemory add <text>",
       "summary": "Ingest text into memory.",

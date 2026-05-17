@@ -12,7 +12,11 @@
     "packages/*/src/**/*.test.ts",
     "plugins/openclaw/src/index.ts",
     "plugins/*/src/**/*.test.ts",
+    "plugins/*/__tests__/**/*.test.mjs",
     "adapters/vercel-ai-sdk/src/index.ts",
+    "adapters/langchain-js/src/index.ts",
+    "adapters/langgraph-js/src/index.ts",
+    "adapters/mastra/src/index.ts",
     "adapters/*/src/**/*.test.ts"
   ],
   "ignorePatterns": [

@@ -53,6 +53,9 @@ const COMMANDS_WITH_AGENT_OUTPUT = [
   'skill path',
   'validate',
   'help',
+  // host-config setup fallback
+  'setup codex',
+  'setup cursor',
   // memory
   'add',
   'ingest',

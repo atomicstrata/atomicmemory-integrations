@@ -24,6 +24,7 @@ import { status } from './setup/status.js';
 import { version } from './setup/version.js';
 import { skill } from './setup/skill.js';
 import { hooks } from './setup/hooks/index.js';
+import { setup } from './setup/host/index.js';
 import { validate } from './setup/validate.js';
 import { completion } from './setup/completion.js';
 import { help } from './setup/help.js';
@@ -54,6 +55,9 @@ const HANDLERS: Record<string, CommandHandler> = {
   'skill get': skill,
   'skill path': skill,
   hooks,
+  setup,
+  'setup codex': setup,
+  'setup cursor': setup,
   validate,
   completion,
   help,
